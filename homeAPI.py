@@ -1,196 +1,70 @@
-from flask import Flask, request, jsonify
-from flask_restful import Api, Resource
-from flasgger import Swagger
+class DeviceAPI:
+    def create_device(self, house_name, room_name, device_type, device_name, **metadata):
+        print(f"Creating device '{device_name}' of type '{device_type}' in room '{room_name}' of house '{house_name}' with metadata: {metadata}")
+        return {"house": house_name, "room": room_name, "device": {"type": device_type, "name": device_name, "metadata": metadata}}
+    
+    def delete_device(self, house_name, room_name, device_name):
+        print(f"Deleting device '{device_name}' from room '{room_name}' in house '{house_name}'")
+        return True
+    
+    def read_device(self, house_name, room_name, device_name):
+        print(f"Reading device '{device_name}' in room '{room_name}' of house '{house_name}'")
+        return {"house": house_name, "room": room_name, "device": {"name": device_name, "data": {"temperature": 22, "humidity": 50}}}
+    
+    def update_device(self, house_name, room_name, device_name, **metadata):
+        print(f"Updating device '{device_name}' in room '{room_name}' of house '{house_name}' with metadata: {metadata}")
+        return {"house": house_name, "room": room_name, "device": {"name": device_name, "updated_metadata": metadata}}
 
-app = Flask(__name__)
-api = Api(app)
-swagger = Swagger(app)  # Initialize Swagger for API documentation
 
-# In-memory storage
-data = {
-    "users": [],
-    "houses": [],
-    "rooms": [],
-    "devices": []
-}
+class HouseAPI:
+    def create_house(self, house_name, **metadata):
+        print(f"Creating house '{house_name}' with metadata: {metadata}")
+        return {"name": house_name, "metadata": metadata, "rooms": []}
+    
+    def delete_house(self, house_name):
+        print(f"Deleting house '{house_name}'")
+        return True
+    
+    def read_house(self, house_name):
+        print(f"Reading house '{house_name}'")
+        return {"name": house_name, "metadata": {}, "rooms": []}
+    
+    def update_house(self, house_name, **metadata):
+        print(f"Updating house '{house_name}' with metadata: {metadata}")
+        return {"name": house_name, "updated_metadata": metadata}
 
-class UserResource(Resource):
-    def post(self):
-        """
-        Add a new user
-        ---
-        tags:
-          - Users
-        parameters:
-          - name: body
-            in: body
-            required: true
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                username:
-                  type: string
-                phone:
-                  type: string
-                email:
-                  type: string
-        responses:
-          201:
-            description: User added successfully
-        """
-        user = request.get_json()
-        data["users"].append(user)
-        return {"message": "User added successfully", "user": user}, 201
 
-    def get(self):
-        """
-        Get all users
-        ---
-        tags:
-          - Users
-        responses:
-          200:
-            description: List of users
-        """
-        return {"users": data["users"]}, 200
+class RoomAPI:
+    def create_room(self, house_name, room_name, floor, size, **metadata):
+        print(f"Creating room '{room_name}' on floor '{floor}' in house '{house_name}' with metadata: {metadata}")
+        return {"house": house_name, "room": {"name": room_name, "floor": floor, "size": size, "metadata": metadata, "devices": []}}
+    
+    def delete_room(self, house_name, room_name):
+        print(f"Deleting room '{room_name}' from house '{house_name}'")
+        return True
+    
+    def read_room(self, house_name, room_name):
+        print(f"Reading room '{room_name}' in house '{house_name}'")
+        return {"house": house_name, "room": {"name": room_name, "metadata": {}, "devices": []}}
+    
+    def update_room(self, house_name, room_name, **metadata):
+        print(f"Updating room '{room_name}' in house '{house_name}' with metadata: {metadata}")
+        return {"house": house_name, "room": {"name": room_name, "updated_metadata": metadata}}
 
-class HouseResource(Resource):
-    def post(self):
-        """
-        Add a new house
-        ---
-        tags:
-          - Houses
-        parameters:
-          - name: body
-            in: body
-            required: true
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                address:
-                  type: string
-                gps_location:
-                  type: string
-        responses:
-          201:
-            description: House added successfully
-        """
-        house = request.get_json()
-        data["houses"].append(house)
-        return {"message": "House added successfully", "house": house}, 201
 
-    def get(self):
-        """
-        Get all houses
-        ---
-        tags:
-          - Houses
-        responses:
-          200:
-            description: List of houses
-        """
-        return {"houses": data["houses"]}, 200
-
-class RoomResource(Resource):
-    def post(self):
-        """
-        Add a new room (must belong to a house)
-        ---
-        tags:
-          - Rooms
-        parameters:
-          - name: body
-            in: body
-            required: true
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                floor:
-                  type: integer
-                size:
-                  type: string
-                house_name:
-                  type: string
-        responses:
-          201:
-            description: Room added successfully
-          400:
-            description: House name is required
-        """
-        room = request.get_json()
-        if "house_name" not in room:
-            return {"error": "House name is required"}, 400
-        data["rooms"].append(room)
-        return {"message": "Room added successfully", "room": room}, 201
-
-    def get(self):
-        """
-        Get all rooms
-        ---
-        tags:
-          - Rooms
-        responses:
-          200:
-            description: List of rooms
-        """
-        return {"rooms": data["rooms"]}, 200
-
-class DeviceResource(Resource):
-    def post(self):
-        """
-        Add a new device (must belong to a room)
-        ---
-        tags:
-          - Devices
-        parameters:
-          - name: body
-            in: body
-            required: true
-            schema:
-              type: object
-              properties:
-                type:
-                  type: string
-                name:
-                  type: string
-                room_name:
-                  type: string
-        responses:
-          201:
-            description: Device added successfully
-          400:
-            description: Room name is required
-        """
-        device = request.get_json()
-        if "room_name" not in device:
-            return {"error": "Room name is required"}, 400
-        data["devices"].append(device)
-        return {"message": "Device added successfully", "device": device}, 201
-
-    def get(self):
-        """
-        Get all devices
-        ---
-        tags:
-          - Devices
-        responses:
-          200:
-            description: List of devices
-        """
-        return {"devices": data["devices"]}, 200
-
-# Add resources to API with their respective routes
-api.add_resource(UserResource, "/users")
-api.add_resource(HouseResource, "/houses")
-api.add_resource(RoomResource, "/rooms")
-api.add_resource(DeviceResource, "/devices")
-
-if __name__ == "__main__":
-    app.run(debug=True)
+class UserAPI:
+    def create_user(self, name, username, phone, email):
+        print(f"Creating user '{username}' with name '{name}', phone '{phone}', and email '{email}'")
+        return {"name": name, "username": username, "phone": phone, "email": email}
+    
+    def delete_user(self, username):
+        print(f"Deleting user '{username}'")
+        return True
+    
+    def read_user(self, username):
+        print(f"Reading user '{username}'")
+        return {"username": username, "name": "Example User", "phone": "0000000000", "email": "example@example.com"}
+    
+    def update_user(self, username, **attributes):
+        print(f"Updating user '{username}' with attributes: {attributes}")
+        return {"username": username, "updated_attributes": attributes}
