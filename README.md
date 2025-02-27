@@ -17,7 +17,7 @@ This test suite provides coverage for four main API classes:
 smart-home-api/
 ├── homeAPI.py         # Main API implementation
 ├── test_home_api.py   # Test suite
-├── mai.py             # Text input by user
+├── main.py             # Text input by user
 └── README.md          # This file
 ```
 
