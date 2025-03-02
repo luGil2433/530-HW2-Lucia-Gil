@@ -1,74 +1,81 @@
-from homeAPI import DeviceAPI, HouseAPI, RoomAPI, UserAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List
+import re
+from models import User, House, Room, Device
 
-def main():
-    user_api = UserAPI()
-    house_api = HouseAPI()
-    room_api = RoomAPI()
-    device_api = DeviceAPI()
-    
+app = FastAPI()
 
-    print("Welcome to the Smart Home API!")
-    while True:
-        action = input("Do you want to create a new entity? ( type user, house, room or device for entering new entity), type '2' to run pre programed test, or type '0' to exsit: ").strip().lower()
-        if action == "2":
-            # Test User API
-            print("\n--- Testing User API ---")
-            user = user_api.create_user("John Doe", "johndoe", "+1234567890", "john@example.com")
-            print(user_api.read_user("johndoe"))
-            print(user_api.update_user("johndoe", phone="+0987654321"))
-            print(user_api.delete_user("johndoe"))
-            
-            # Test House API
-            print("\n--- Testing House API ---")
-            house = house_api.create_house("My Smart Home", address="123 Main St", gps_location="40.7128,-74.0060")
-            print(house_api.read_house("My Smart Home"))
-            print(house_api.update_house("My Smart Home", address="456 Elm St"))
-            print(house_api.delete_house("My Smart Home"))
-            
-            # Test Room API
-            print("\n--- Testing Room API ---")
-            room = room_api.create_room("My Smart Home", "Living Room", 1, "Large")
-            print(room_api.read_room("My Smart Home", "Living Room"))
-            print(room_api.update_room("My Smart Home", "Living Room", color="Blue"))
-            print(room_api.delete_room("My Smart Home", "Living Room"))
-            
-            # Test Device API
-            print("\n--- Testing Device API ---")
-            device = device_api.create_device("My Smart Home", "Living Room", "Light", "Ceiling Light", brightness=80)
-            print(device_api.read_device("My Smart Home", "Living Room", "Ceiling Light"))
-            print(device_api.update_device("My Smart Home", "Living Room", "Ceiling Light", brightness=100))
-            print(device_api.delete_device("My Smart Home", "Living Room", "Ceiling Light"))
-            break
-        elif action == "user":
-            name = input("Enter full name: ")
-            username = input("Enter username: ")
-            phone = input("Enter phone number: ")
-            email = input("Enter email: ")
-            api = UserAPI()
-            print(api.create_user(name, username, phone, email))
-        elif action == "house":
-            house_name = input("Enter house name: ")
-            api = HouseAPI()
-            print(api.create_house(house_name))
-        elif action == "room":
-            house_name = input("Enter house name: ")
-            room_name = input("Enter room name: ")
-            floor = int(input("Enter floor number: "))
-            size = input("Enter room size: ")
-            api = RoomAPI()
-            print(api.create_room(house_name, room_name, floor, size))
-        elif action == "device":
-            house_name = input("Enter house name: ")
-            room_name = input("Enter room name: ")
-            device_type = input("Enter device type: ")
-            device_name = input("Enter device name: ")
-            api = DeviceAPI()
-            print(api.create_device(house_name, room_name, device_type, device_name))
-        elif action == "0":
-            break
-        else:
-            print("Invalid option. Please enter 'user', 'house', 'room', or 'device'.")
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# In-memory "database"
+users_db = []
+houses_db = []
+rooms_db = []
+devices_db = []
 
+# User Endpoints
+@app.post("/users", response_model=User)
+def create_user(user: User):
+    if not re.match(r"^\+?\d+$", user.phone) or not re.match(r"[^@]+@[^@]+\.[^@]+", user.email):
+        raise HTTPException(status_code=400, detail="Invalid phone number or email format")
+    users_db.append(user)
+    return user
+
+@app.get("/users/{username}", response_model=User)
+def read_user(username: str):
+    for user in users_db:
+        if user.username == username:
+            return user
+    raise HTTPException(status_code=404, detail="User not found")
+
+# House Endpoints
+@app.post("/houses", response_model=House)
+def create_house(house: House):
+    houses_db.append(house)
+    return house
+
+@app.get("/houses/{house_name}", response_model=House)
+def read_house(house_name: str):
+    for house in houses_db:
+        if house.name == house_name:
+            return house
+    raise HTTPException(status_code=404, detail="House not found")
+
+# Room Endpoints
+@app.post("/rooms", response_model=Room)
+def create_room(room: Room):
+    rooms_db.append(room)
+    return room
+
+@app.get("/rooms/{house_name}/{room_name}", response_model=Room)
+def read_room(house_name: str, room_name: str):
+    for room in rooms_db:
+        if room.house_name == house_name and room.name == room_name:
+            return room
+    raise HTTPException(status_code=404, detail="Room not found")
+
+# Device Endpoints
+@app.post("/devices", response_model=Device)
+def create_device(device: Device):
+    devices_db.append(device)
+    return device
+
+@app.get("/devices/{house_name}/{room_name}/{device_name}", response_model=Device)
+def read_device(house_name: str, room_name: str, device_name: str):
+    for device in devices_db:
+        if device.house_name == house_name and device.room_name == room_name and device.name == device_name:
+            return device
+    raise HTTPException(status_code=404, detail="Device not found")
+
+# Run FastAPI
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
