@@ -1,5 +1,5 @@
 import unittest
-from homeAPI import DeviceAPI, HouseAPI, RoomAPI, UserAPI
+from models import DeviceAPI, HouseAPI, RoomAPI, UserAPI
 
 class TestUserAPI(unittest.TestCase):
     def setUp(self):

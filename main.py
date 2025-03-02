@@ -1,4 +1,4 @@
-from homeAPI import DeviceAPI, HouseAPI, RoomAPI, UserAPI
+from models import DeviceAPI, HouseAPI, RoomAPI, UserAPI
 
 def main():
     user_api = UserAPI()
