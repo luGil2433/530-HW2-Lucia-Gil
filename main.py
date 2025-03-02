@@ -110,7 +110,7 @@ def get_html():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Home Management System</title>
+    <title>Smart Home Management System Administration View</title>
     <style>
         :root {
             --primary: #2563eb;
