@@ -75,7 +75,3 @@ def read_device(house_name: str, room_name: str, device_name: str):
             return device
     raise HTTPException(status_code=404, detail="Device not found")
 
-# Run FastAPI
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
