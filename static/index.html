@@ -327,6 +327,7 @@
                 <div class="success-message">User ${isEditing ? 'updated' : 'created'} successfully!</div>
             `;
             document.getElementById('user-form').reset();
+            document.getElementById('user-form-container').style.display = 'none';
             loadUsers();
         } catch (error) {
             document.getElementById('user-form-message').innerHTML = `
@@ -408,358 +409,478 @@ async function deleteUser(username) {
     }
 }   
         // Houses Section
-        function showHouseSection() {
-            const html = `
-                <h2>Houses</h2>
-                <button id="add-house-btn">Add New House</button>
-                <div id="house-form-container" style="display: none; margin-top: 20px;">
-                    <div class="card">
-                        <h3>Add House</h3>
-                        <form id="house-form">
-                            <div class="form-group">
-                                <label for="house-name">Name</label>
-                                <input type="text" id="house-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="house-address">Address</label>
-                                <input type="text" id="house-address" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="house-owner">Owner Username</label>
-                                <input type="text" id="house-owner" required>
-                            </div>
-                            <button type="submit">Save House</button>
-                        </form>
-                        <div id="house-form-message"></div>
+function showHouseSection() {
+    const html = `
+        <h2>Houses</h2>
+        <button id="add-house-btn">Add New House</button>
+        <div id="house-form-container" style="display: none; margin-top: 20px;">
+            <div class="card">
+                <h3 id="house-form-title">Add House</h3>
+                <form id="house-form">
+                    <div class="form-group">
+                        <label for="house-name">Name</label>
+                        <input type="text" id="house-name" required>
                     </div>
-                </div>
-                <div id="house-list" class="entity-list">
-                    <!-- Houses will be loaded here -->
-                    <p>Loading houses...</p>
-                </div>
+                    <div class="form-group">
+                        <label for="house-address">Address</label>
+                        <input type="text" id="house-address" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="house-owner">Owner Username</label>
+                        <input type="text" id="house-owner" required>
+                    </div>
+                    <button type="submit">Save House</button>
+                </form>
+                <div id="house-form-message"></div>
+            </div>
+        </div>
+        <div id="house-list" class="entity-list">
+            <!-- Houses will be loaded here -->
+            <p>Loading houses...</p>
+        </div>
+    `;
+    
+    contentEl.innerHTML = html;
+    
+    // Add event listeners
+    document.getElementById('add-house-btn').addEventListener('click', () => {
+        document.getElementById('house-form-title').innerText = 'Add House';
+        document.getElementById('house-form').dataset.editing = 'false';
+        document.getElementById('house-form-container').style.display = 'block';
+    });
+    
+    document.getElementById('house-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('house-name').value,
+            address: document.getElementById('house-address').value,
+            owner_username: document.getElementById('house-owner').value
+        };
+        
+        const isEditing = document.getElementById('house-form').dataset.editing === 'true';
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing ? `${API_BASE_URL}/houses/${formData.name}` : `${API_BASE_URL}/houses`;
+        
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to save house');
+            }
+            
+            const data = await response.json();
+            document.getElementById('house-form-message').innerHTML = `
+                <div class="success-message">House ${isEditing ? 'updated' : 'created'} successfully!</div>
             `;
-            
-            contentEl.innerHTML = html;
-            
-            // Add event listeners
-            document.getElementById('add-house-btn').addEventListener('click', () => {
-                document.getElementById('house-form-container').style.display = 'block';
-            });
-            
-            document.getElementById('house-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const formData = {
-                    name: document.getElementById('house-name').value,
-                    address: document.getElementById('house-address').value,
-                    owner_username: document.getElementById('house-owner').value
-                };
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/houses`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Failed to create house');
-                    }
-                    
-                    const data = await response.json();
-                    document.getElementById('house-form-message').innerHTML = `
-                        <div class="success-message">House created successfully!</div>
-                    `;
-                    document.getElementById('house-form').reset();
-                    loadHouses();
-                } catch (error) {
-                    document.getElementById('house-form-message').innerHTML = `
-                        <div class="error-message">${error.message}</div>
-                    `;
-                }
-            });
-            
-            // Load houses
+            document.getElementById('house-form').reset();
+            document.getElementById('house-form-container').style.display = 'none';
             loadHouses();
+        } catch (error) {
+            document.getElementById('house-form-message').innerHTML = `
+                <div class="error-message">${error.message}</div>
+            `;
+        }
+    });
+    
+    // Load houses
+    loadHouses();
+}
+
+async function loadHouses() {
+    const houseListEl = document.getElementById('house-list');
+    houseListEl.innerHTML = '<p>Loading houses...</p>';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/houses`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load houses');
         }
         
-        async function loadHouses() {
-            const houseListEl = document.getElementById('house-list');
-            houseListEl.innerHTML = '<p>Loading houses...</p>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/houses`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load houses');
-                }
-                
-                const houses = await response.json();
-                
-                if (houses.length === 0) {
-                    houseListEl.innerHTML = '<p>No houses available yet. Add some houses to see them here.</p>';
-                } else {
-                    houseListEl.innerHTML = houses.map(house => `
-                        <div class="card">
-                            <h3>${house.name}</h3>
-                            <p><strong>Address:</strong> ${house.address}</p>
-                            <p><strong>Owner:</strong> ${house.owner_username}</p>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                houseListEl.innerHTML = `<div class="error-message">Error loading houses: ${error.message}</div>`;
-            }
+        const houses = await response.json();
+        
+        if (houses.length === 0) {
+            houseListEl.innerHTML = '<p>No houses available yet. Add some houses to see them here.</p>';
+        } else {
+            houseListEl.innerHTML = houses.map(house => `
+                <div class="card">
+                    <h3>${house.name}</h3>
+                    <p><strong>Address:</strong> ${house.address}</p>
+                    <p><strong>Owner Username:</strong> ${house.owner_username}</p>
+                    <div class="action-buttons">
+                        <button onclick="editHouse('${house.name}')">Edit</button>
+                        <button onclick="deleteHouse('${house.name}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
         }
+    } catch (error) {
+        houseListEl.innerHTML = `<div class="error-message">Error loading houses: ${error.message}</div>`;
+    }
+}
+
+async function editHouse(name) {
+    // Fetch house data and populate the form for editing
+    try {
+        const response = await fetch(`${API_BASE_URL}/houses/${name}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch house data');
+        }
+        const house = await response.json();
+        document.getElementById('house-name').value = house.name;
+        document.getElementById('house-address').value = house.address;
+        document.getElementById('house-owner').value = house.owner_username;
+        document.getElementById('house-form-title').innerText = 'Edit House';
+        document.getElementById('house-form').dataset.editing = 'true';
+        document.getElementById('house-form-container').style.display = 'block';
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+
+async function deleteHouse(name) {
+    // Delete house
+    try {
+        const response = await fetch(`${API_BASE_URL}/houses/${name}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete house');
+        }
+        loadHouses();
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
         
         // Rooms Section
-        function showRoomSection() {
-            const html = `
-                <h2>Rooms</h2>
-                <button id="add-room-btn">Add New Room</button>
-                <div id="room-form-container" style="display: none; margin-top: 20px;">
-                    <div class="card">
-                        <h3>Add Room</h3>
-                        <form id="room-form">
-                            <div class="form-group">
-                                <label for="room-name">Name</label>
-                                <input type="text" id="room-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="room-house">House Name</label>
-                                <input type="text" id="room-house" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="room-type">Type</label>
-                                <select id="room-type" required>
-                                    <option value="Living Room">Living Room</option>
-                                    <option value="Bedroom">Bedroom</option>
-                                    <option value="Kitchen">Kitchen</option>
-                                    <option value="Bathroom">Bathroom</option>
-                                    <option value="Office">Office</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <button type="submit">Save Room</button>
-                        </form>
-                        <div id="room-form-message"></div>
+// Rooms Section
+function showRoomSection() {
+    const html = `
+        <h2>Rooms</h2>
+        <button id="add-room-btn">Add New Room</button>
+        <div id="room-form-container" style="display: none; margin-top: 20px;">
+            <div class="card">
+                <h3 id="room-form-title">Add Room</h3>
+                <form id="room-form">
+                    <div class="form-group">
+                        <label for="room-name">Name</label>
+                        <input type="text" id="room-name" required>
                     </div>
-                </div>
-                <div id="room-list" class="entity-list">
-                    <!-- Rooms will be loaded here -->
-                    <p>Loading rooms...</p>
-                </div>
+                    <div class="form-group">
+                        <label for="room-house">House Name</label>
+                        <input type="text" id="room-house" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="room-type">Type</label>
+                        <input type="text" id="room-type" required>
+                    </div>
+                    <button type="submit">Save Room</button>
+                </form>
+                <div id="room-form-message"></div>
+            </div>
+        </div>
+        <div id="room-list" class="entity-list">
+            <!-- Rooms will be loaded here -->
+            <p>Loading rooms...</p>
+        </div>
+    `;
+    
+    contentEl.innerHTML = html;
+    
+    // Add event listeners
+    document.getElementById('add-room-btn').addEventListener('click', () => {
+        document.getElementById('room-form-title').innerText = 'Add Room';
+        document.getElementById('room-form').dataset.editing = 'false';
+        document.getElementById('room-form-container').style.display = 'block';
+    });
+    
+    document.getElementById('room-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('room-name').value,
+            house_name: document.getElementById('room-house').value,
+            type: document.getElementById('room-type').value
+        };
+        
+        const isEditing = document.getElementById('room-form').dataset.editing === 'true';
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing ? `${API_BASE_URL}/rooms/${formData.name}` : `${API_BASE_URL}/rooms`;
+        
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to save room');
+            }
+            
+            const data = await response.json();
+            document.getElementById('room-form-message').innerHTML = `
+                <div class="success-message">Room ${isEditing ? 'updated' : 'created'} successfully!</div>
             `;
-            
-            contentEl.innerHTML = html;
-            
-            // Add event listeners
-            document.getElementById('add-room-btn').addEventListener('click', () => {
-                document.getElementById('room-form-container').style.display = 'block';
-            });
-            
-            document.getElementById('room-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const formData = {
-                    name: document.getElementById('room-name').value,
-                    house_name: document.getElementById('room-house').value,
-                    type: document.getElementById('room-type').value
-                };
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/rooms`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Failed to create room');
-                    }
-                    
-                    const data = await response.json();
-                    document.getElementById('room-form-message').innerHTML = `
-                        <div class="success-message">Room created successfully!</div>
-                    `;
-                    document.getElementById('room-form').reset();
-                    loadRooms();
-                } catch (error) {
-                    document.getElementById('room-form-message').innerHTML = `
-                        <div class="error-message">${error.message}</div>
-                    `;
-                }
-            });
-            
-            // Load rooms
+            document.getElementById('room-form').reset();
+            document.getElementById('room-form-container').style.display = 'none';
             loadRooms();
+        } catch (error) {
+            document.getElementById('room-form-message').innerHTML = `
+                <div class="error-message">${error.message}</div>
+            `;
+        }
+    });
+    
+    // Load rooms
+    loadRooms();
+}
+
+async function loadRooms() {
+    const roomListEl = document.getElementById('room-list');
+    roomListEl.innerHTML = '<p>Loading rooms...</p>';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/rooms`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load rooms');
         }
         
-        async function loadRooms() {
-            const roomListEl = document.getElementById('room-list');
-            roomListEl.innerHTML = '<p>Loading rooms...</p>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/rooms`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load rooms');
-                }
-                
-                const rooms = await response.json();
-                
-                if (rooms.length === 0) {
-                    roomListEl.innerHTML = '<p>No rooms available yet. Add some rooms to see them here.</p>';
-                } else {
-                    roomListEl.innerHTML = rooms.map(room => `
-                        <div class="card">
-                            <h3>${room.name}</h3>
-                            <p><strong>House:</strong> ${room.house_name}</p>
-                            <p><strong>Type:</strong> ${room.type}</p>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                roomListEl.innerHTML = `<div class="error-message">Error loading rooms: ${error.message}</div>`;
-            }
-        }
+        const rooms = await response.json();
         
-        // Devices Section
-        function showDeviceSection() {
-            const html = `
-                <h2>Devices</h2>
-                <button id="add-device-btn">Add New Device</button>
-                <div id="device-form-container" style="display: none; margin-top: 20px;">
-                    <div class="card">
-                        <h3>Add Device</h3>
-                        <form id="device-form">
-                            <div class="form-group">
-                                <label for="device-name">Name</label>
-                                <input type="text" id="device-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="device-house">House Name</label>
-                                <input type="text" id="device-house" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="device-room">Room Name</label>
-                                <input type="text" id="device-room" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="device-type">Type</label>
-                                <select id="device-type" required>
-                                    <option value="Light">Light</option>
-                                    <option value="Thermostat">Thermostat</option>
-                                    <option value="Lock">Lock</option>
-                                    <option value="Camera">Camera</option>
-                                    <option value="Speaker">Speaker</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="device-status">Status</label>
-                                <select id="device-status" required>
-                                    <option value="on">On</option>
-                                    <option value="off">Off</option>
-                                </select>
-                            </div>
-                            <button type="submit">Save Device</button>
-                        </form>
-                        <div id="device-form-message"></div>
+        if (rooms.length === 0) {
+            roomListEl.innerHTML = '<p>No rooms available yet. Add some rooms to see them here.</p>';
+        } else {
+            roomListEl.innerHTML = rooms.map(room => `
+                <div class="card">
+                    <h3>${room.name}</h3>
+                    <p><strong>House Name:</strong> ${room.house_name}</p>
+                    <p><strong>Type:</strong> ${room.type}</p>
+                    <div class="action-buttons">
+                        <button onclick="editRoom('${room.name}')">Edit</button>
+                        <button onclick="deleteRoom('${room.name}')">Delete</button>
                     </div>
                 </div>
-                <div id="device-list" class="entity-list">
-                    <!-- Devices will be loaded here -->
-                    <p>Loading devices...</p>
-                </div>
+            `).join('');
+        }
+    } catch (error) {
+        roomListEl.innerHTML = `<div class="error-message">Error loading rooms: ${error.message}</div>`;
+    }
+}
+
+async function editRoom(name) {
+    // Fetch room data and populate the form for editing
+    try {
+        const response = await fetch(`${API_BASE_URL}/rooms/${name}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch room data');
+        }
+        const room = await response.json();
+        document.getElementById('room-name').value = room.name;
+        document.getElementById('room-house').value = room.house_name;
+        document.getElementById('room-type').value = room.type;
+        document.getElementById('room-form-title').innerText = 'Edit Room';
+        document.getElementById('room-form').dataset.editing = 'true';
+        document.getElementById('room-form-container').style.display = 'block';
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+
+async function deleteRoom(name) {
+    // Delete room
+    try {
+        const response = await fetch(`${API_BASE_URL}/rooms/${name}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete room');
+        }
+        loadRooms();
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+
+// Devices Section
+function showDeviceSection() {
+    const html = `
+        <h2>Devices</h2>
+        <button id="add-device-btn">Add New Device</button>
+        <div id="device-form-container" style="display: none; margin-top: 20px;">
+            <div class="card">
+                <h3 id="device-form-title">Add Device</h3>
+                <form id="device-form">
+                    <div class="form-group">
+                        <label for="device-name">Name</label>
+                        <input type="text" id="device-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-house">House Name</label>
+                        <input type="text" id="device-house" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-room">Room Name</label>
+                        <input type="text" id="device-room" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-type">Type</label>
+                        <input type="text" id="device-type" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-status">Status</label>
+                        <input type="text" id="device-status" required>
+                    </div>
+                    <button type="submit">Save Device</button>
+                </form>
+                <div id="device-form-message"></div>
+            </div>
+        </div>
+        <div id="device-list" class="entity-list">
+            <!-- Devices will be loaded here -->
+            <p>Loading devices...</p>
+        </div>
+    `;
+    
+    contentEl.innerHTML = html;
+    
+    // Add event listeners
+    document.getElementById('add-device-btn').addEventListener('click', () => {
+        document.getElementById('device-form-title').innerText = 'Add Device';
+        document.getElementById('device-form').dataset.editing = 'false';
+        document.getElementById('device-form-container').style.display = 'block';
+    });
+    
+    document.getElementById('device-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('device-name').value,
+            house_name: document.getElementById('device-house').value,
+            room_name: document.getElementById('device-room').value,
+            type: document.getElementById('device-type').value,
+            status: document.getElementById('device-status').value
+        };
+        
+        const isEditing = document.getElementById('device-form').dataset.editing === 'true';
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing ? `${API_BASE_URL}/devices/${formData.name}` : `${API_BASE_URL}/devices`;
+        
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to save device');
+            }
+            
+            const data = await response.json();
+            document.getElementById('device-form-message').innerHTML = `
+                <div class="success-message">Device ${isEditing ? 'updated' : 'created'} successfully!</div>
             `;
-            
-            contentEl.innerHTML = html;
-            
-            // Add event listeners
-            document.getElementById('add-device-btn').addEventListener('click', () => {
-                document.getElementById('device-form-container').style.display = 'block';
-            });
-            
-            document.getElementById('device-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const formData = {
-                    name: document.getElementById('device-name').value,
-                    house_name: document.getElementById('device-house').value,
-                    room_name: document.getElementById('device-room').value,
-                    type: document.getElementById('device-type').value,
-                    status: document.getElementById('device-status').value
-                };
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/devices`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.detail || 'Failed to create device');
-                    }
-                    
-                    const data = await response.json();
-                    document.getElementById('device-form-message').innerHTML = `
-                        <div class="success-message">Device created successfully!</div>
-                    `;
-                    document.getElementById('device-form').reset();
-                    loadDevices();
-                } catch (error) {
-                    document.getElementById('device-form-message').innerHTML = `
-                        <div class="error-message">${error.message}</div>
-                    `;
-                }
-            });
-            
-            // Load devices
+            document.getElementById('device-form').reset();
+            document.getElementById('device-form-container').style.display = 'none';
             loadDevices();
+        } catch (error) {
+            document.getElementById('device-form-message').innerHTML = `
+                <div class="error-message">${error.message}</div>
+            `;
+        }
+    });
+    
+    // Load devices
+    loadDevices();
+}
+
+async function loadDevices() {
+    const deviceListEl = document.getElementById('device-list');
+    deviceListEl.innerHTML = '<p>Loading devices...</p>';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/devices`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load devices');
         }
         
-        async function loadDevices() {
-            const deviceListEl = document.getElementById('device-list');
-            deviceListEl.innerHTML = '<p>Loading devices...</p>';
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/devices`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load devices');
-                }
-                
-                const devices = await response.json();
-                
-                if (devices.length === 0) {
-                    deviceListEl.innerHTML = '<p>No devices available yet. Add some devices to see them here.</p>';
-                } else {
-                    deviceListEl.innerHTML = devices.map(device => `
-                        <div class="card">
-                            <h3>${device.name}</h3>
-                            <p><strong>House:</strong> ${device.house_name}</p>
-                            <p><strong>Room:</strong> ${device.room_name}</p>
-                            <p><strong>Type:</strong> ${device.type}</p>
-                            <p><strong>Status:</strong> <span style="color: ${device.status === 'on' ? 'var(--success)' : 'var(--error)'}">
-                                ${device.status.toUpperCase()}</span></p>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                deviceListEl.innerHTML = `<div class="error-message">Error loading devices: ${error.message}</div>`;
-            }
+        const devices = await response.json();
+        
+        if (devices.length === 0) {
+            deviceListEl.innerHTML = '<p>No devices available yet. Add some devices to see them here.</p>';
+        } else {
+            deviceListEl.innerHTML = devices.map(device => `
+                <div class="card">
+                    <h3>${device.name}</h3>
+                    <p><strong>House Name:</strong> ${device.house_name}</p>
+                    <p><strong>Room Name:</strong> ${device.room_name}</p>
+                    <p><strong>Type:</strong> ${device.type}</p>
+                    <p><strong>Status:</strong> ${device.status}</p>
+                    <div class="action-buttons">
+                        <button onclick="editDevice('${device.name}')">Edit</button>
+                        <button onclick="deleteDevice('${device.name}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
         }
+    } catch (error) {
+        deviceListEl.innerHTML = `<div class="error-message">Error loading devices: ${error.message}</div>`;
+    }
+}
+
+async function editDevice(name) {
+    // Fetch device data and populate the form for editing
+    try {
+        const response = await fetch(`${API_BASE_URL}/devices/${name}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch device data');
+        }
+        const device = await response.json();
+        document.getElementById('device-name').value = device.name;
+        document.getElementById('device-house').value = device.house_name;
+        document.getElementById('device-room').value = device.room_name;
+        document.getElementById('device-type').value = device.type;
+        document.getElementById('device-status').value = device.status;
+        document.getElementById('device-form-title').innerText = 'Edit Device';
+        document.getElementById('device-form').dataset.editing = 'true';
+        document.getElementById('device-form-container').style.display = 'block';
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+
+async function deleteDevice(name) {
+    // Delete device
+    try {
+        const response = await fetch(`${API_BASE_URL}/devices/${name}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete device');
+        }
+        loadDevices();
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
         
         // Initialize the app
         setActiveSection('users');
