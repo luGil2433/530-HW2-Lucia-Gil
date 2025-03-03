@@ -1,69 +1,83 @@
-# Smart Home API Test Suite
-
-A comprehensive test suite for the Smart Home API system that tests user management, house configuration, room setup, and device control functionality.
+# Smart Home Management System
 
 ## Overview
+The Smart Home Management System is a web-based application designed to manage users, houses, rooms, and devices within a smart home setup. The system consists of a frontend web interface (`index.html`) and a backend API built using FastAPI (`main.py`). The data models are defined in `models.py`.
 
-This test suite provides coverage for four main API classes:
-- UserAPI: Manages user accounts and profiles
-- HouseAPI: Handles house creation and configuration
-- RoomAPI: Manages rooms within houses
-- DeviceAPI: Controls smart devices within rooms
+## Files Description
 
+### 1. `index.html`
+This file provides the frontend interface for managing the smart home system. It includes:
+- A sidebar for navigation between Users, Houses, Rooms, and Devices.
+- A dashboard layout for displaying and interacting with different entities.
+- Forms for adding, updating, and deleting users, houses, rooms, and devices.
+- JavaScript for making API requests to the backend.
 
-## Project Structure
+### 2. `main.py`
+This is the backend API implemented using FastAPI. It provides CRUD operations for managing:
+- Users
+- Houses
+- Rooms
+- Devices
 
-```
-smart-home-api/
-├── homeAPI.py         # Main API implementation
-├── test_home_api.py   # Test suite
-├── main.py             # Text input by user
-└── README.md          # This file
-```
+It also includes:
+- CORS middleware configuration.
+- Static file serving for the frontend.
+- API endpoints for handling user, house, room, and device data.
 
-## API Usage Examples
+### 3. `models.py`
+This file defines the data models using Pydantic. The models include:
+- `User`: Contains user details such as name, username, phone, and email.
+- `House`: Represents a house with optional metadata.
+- `Room`: Represents a room within a house, including floor and size information.
+- `Device`: Represents a smart device within a room, with additional metadata options.
 
-### Creating a User
-```python
-user_api = UserAPI()
-user = user_api.create_user(
-    "John Doe",
-    "johndoe",
-    "+1234567890",
-    "john@example.com"
-)
-```
+## Installation and Setup
 
-### Creating a House
-```python
-house_api = HouseAPI()
-house = house_api.create_house(
-    "My Smart Home",
-    address="123 Main St",
-    gps_location="40.7128,-74.0060"
-)
+### Prerequisites
+Ensure you have Python installed (version 3.8 or later). Install FastAPI and Uvicorn using:
+```bash
+pip install fastapi uvicorn
 ```
 
-### Adding a Room
-```python
-room_api = RoomAPI()
-room = room_api.create_room(
-    "My Smart Home",
-    "Living Room",
-    1,
-    "Large",
-    color="Blue"
-)
+### Running the Application
+1. Start the FastAPI backend:
+```bash
+uvicorn main:app --reload
 ```
+2. Open `index.html` in a browser or serve it using a static file server.
 
-### Adding a Device
-```python
-device_api = DeviceAPI()
-device = device_api.create_device(
-    "My Smart Home",
-    "Living Room",
-    "Light",
-    "Ceiling Light",
-    brightness=80
-)
-```
+## API Endpoints
+
+### Users
+- `POST /users` - Create a new user.
+- `GET /users` - Get all users.
+- `GET /users/{username}` - Get details of a specific user.
+- `PUT /users/{username}` - Update user details.
+- `DELETE /users/{username}` - Delete a user.
+
+### Houses
+- `POST /houses` - Create a new house.
+- `GET /houses` - Get all houses.
+- `GET /houses/{name}` - Get details of a specific house.
+- `PUT /houses/{name}` - Update house details.
+- `DELETE /houses/{name}` - Delete a house.
+
+### Rooms
+- `POST /rooms` - Create a new room.
+- `GET /rooms` - Get all rooms.
+- `GET /rooms/{name}` - Get details of a specific room.
+- `PUT /rooms/{name}` - Update room details.
+- `DELETE /rooms/{name}` - Delete a room.
+
+### Devices
+- `POST /devices` - Create a new device.
+- `GET /devices` - Get all devices.
+- `GET /devices/{name}` - Get details of a specific device.
+- `PUT /devices/{name}` - Update device details.
+- `DELETE /devices/{name}` - Delete a device.
+
+## Contributing
+To contribute to this project, fork the repository, create a feature branch, and submit a pull request.
+
+## License
+This project is open-source and available under the MIT License.
